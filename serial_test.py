@@ -1,12 +1,18 @@
 #!/usr/bin/env python
 # coding: utf-8
-
+'''
+- If serial error:
+$sudo chmod a+rw /dev/ttyACM0
+- To access, visualize serial ports
+python -m serial.tools.list_ports
+'''
 
 import serial
 import time
 
 ser=serial.Serial('/dev/ttyACM0',9600, bytesize = 8, stopbits = 1, 
-                  timeout = 0, parity='N')
+                  timeout = 0, parity='N') 
+
 
 
 # In[11]:
