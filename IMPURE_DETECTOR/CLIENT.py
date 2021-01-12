@@ -193,8 +193,6 @@ while True:
         # centroid coordinates of the person,
         cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
         cv2.circle(frame, (cX, cY), 3, (90, 0, 252), 2)
-        # MQTT Module
-        # Ready but not implemented to test on RPi (local IP working)
 
 
     # Draw the total number of social distancing violations on the
@@ -213,7 +211,12 @@ while True:
     # OUTPUT IMAGE
     cv2.imshow("IMPURE DETECTOR", frame)
     key = cv2.waitKey(1)
-    # MQTT_PUBLISH(frame, sens) if FLAG_IMPURES (Not tested WAN)
+    '''
+    # MQTT Module
+      # Ready but not implemented to test on RPi (local IP working)
+      (Not tested WAN)
+    '''
+    # MQTT_PUBLISH(frame, sens) if FLAG_IMPURES 
 
 
     if (key % 256 == 27):
