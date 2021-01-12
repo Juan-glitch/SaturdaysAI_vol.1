@@ -1,8 +1,11 @@
+################################################################################
+### client.py
+################################################################################
+
+
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-################################################################################
-#CLIENT.py
-################################################################################
+
 
 from __future__ import print_function
 import io
@@ -79,8 +82,8 @@ def MQTT_PUBLISH(frame, sensors):
 
 
 # ## MAIN CLIENT ROUTINE
-url = "http://"+SERVER_HOST+":"+str(SERVER_PORT)+API_PATH
-#url = "http://6eedbc29acb3.ngrok.io"
+url = "http://"+SERVER_HOST+":"+str(SERVER_PORT)+API_PATH #(Local)
+#url = "http://5fd03fc05c31.ngrok.io" + API_PATH //(WAN) ngrok
 
 # # START CAPTURING
 n = 2 #camera
