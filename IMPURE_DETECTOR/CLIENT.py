@@ -1,28 +1,16 @@
-################################################################################
-### client.py
-################################################################################
-
-
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-
-
-"""
-Dummy client, interacts with the server sending and receiving
-compressed numpy arrays.
-
-Run:
-python client.py
-# Camera /dev
- ls -ltrh /dev/video*
-"""
-
+################################################################################
+#CLIENT.py
+################################################################################
 
 from __future__ import print_function
 import io
 import numpy as np
 import zlib
 import requests
+import paho.mqtt.publish as publish
+import paho.mqtt.client as mqtt
 import jsonpickle
 import cv2
 import imageio
@@ -30,14 +18,23 @@ import json
 import time
 import serial
 
+# MQTT PUBLISHER
+BROKER_ADDRESS = '127.0.0.1'
+PORT = 1883
+ID = 'WATCHDOG'
+TOPIC= ['DATA','IMG']
+# MQTT/Publish-Format
+data_send = {'index': 1,'img_id': 2, 'time': 3, 'Cx': 4.1,'Cy': 5,'Cz': 5.001, 'temp': 699}
+#In case TCP is not enought
+# https://pypi.org/project/paho-mqtt/#subscribe-unsubscribe
+
+
 # SERIAL
 ser=serial.Serial('/dev/ttyACM0',115200, bytesize = 8, stopbits = 1,
                   timeout = 0, parity='N')
 print(ser.name)         # check which port was really used
-# To check port $python -m serial.tools.list_ports
-# sudo chmod a+rw /dev/ttyACM1
-# ## CONFIG
 
+# ## CONFIG
 SERVER_HOST= "localhost"
 SERVER_PORT = 8080
 API_PATH = "/api/test"
@@ -69,42 +66,64 @@ def preprocess(data):
 
     return sens
 
+def MQTT_PUBLISH(frame, sensors):
+
+    data = {'index': inpures, 'img_id': inpures+1, 'time': time.time(),
+            'Cx': 4.1, 'Cy': 5, 'Cz': 5.001, 'temp': sens[0],
+            'humidity': sens[1]}
+    bytedata = json.dumps(data)
+    byteImg = bytearray(frame)
+    publish.single(topic=TOPIC[0], payload=bytedata, client_id=ID, hostname=BROKER_ADDRESS, port=PORT)
+    data_send['index'] = inpures
+    publish.single(topic=TOPIC[1], payload=byteImg, client_id=ID, hostname=BROKER_ADDRESS, port=PORT)
+
 
 # ## MAIN CLIENT ROUTINE
 url = "http://"+SERVER_HOST+":"+str(SERVER_PORT)+API_PATH
 #url = "http://6eedbc29acb3.ngrok.io"
 
 # # START CAPTURING
+n = 2 #camera
+cam = cv2.VideoCapture(n)   #WebCam, if is not working change the number
+
+# CONFIG/ PARAMETERS
+
 # define the minimum safe distance (in pixels) that two people can be
 # from each other
 MIN_DISTANCE = 100 # Test/Error
-n = 2 #camera
-cam = cv2.VideoCapture(n)   #WebCam, if is not working change the number
 THRESHOLD = 0.4
 H, W = 480,640
 classes = []
 with open("coco.names","r") as f:
     classes = [line.strip() for line in f.readlines()]
+colors = np.random.uniform(0,255, size=(len(classes),3))
+font =cv2.FONT_HERSHEY_PLAIN
+
 
 #GET FRAMES IN REAL TIME:
 start_time = time.time() #colect start time
 frame_id = 0 #colects frame quanty
-colors = np.random.uniform(0,255, size=(len(classes),3))
-font =cv2.FONT_HERSHEY_PLAIN
-results = []
 
+# Local Variables
+results = []
+inpures = 0
 
 
 while True:
+
     ret, frame = cam.read()
-    sens = []
     if not ret:
         # Check camera
         # $v4l2-ctl --list-devices
         print("failed to grab frame")
         break
+    # Latency  & Various  values
+    frame_id += 1
+    sens = []
+    FLAG_IMPURES = False
 
-    # encode
+
+    # Encode IMG
     is_success, buffer = cv2.imencode(".jpg", frame)
     io_buf = io.BytesIO(buffer)  #not an image
     # decode
@@ -112,17 +131,16 @@ while True:
     #print("decode_img type:{}", type(decode_img))
 
     compressed, u_sz, c_sz = compress_nparr(decode_img)
-    #
     '''
     print("\nsending array to", url)
     print("size in bits (orig, compressed):", u_sz, c_sz)
     print ("decode_img type:{}",type(decode_img))
     print("compressed type:{}", type(compressed))
     '''
-    #
     resp = requests.post(url, data=compressed,
                          headers={'Content-Type': 'application/octet-stream'})  #HTTP
     ser.write(b'SEND')
+
     while True:
 
         data = ser.read()  # Wait forever for anything
@@ -136,16 +154,14 @@ while True:
             break
     sens = preprocess(data)
     print(sens)
-    if (sens[2] < 5.0):
-        ser.write(b'ALRM')
-        print('Impurity is not acceptable!!')
-
 
     results = resp.json()
 
+
+    '''
+    NOTE:
     #[[{'py/tuple': [0.8558927178382874, {'py/tuple': [134, 169, 550, 420]}, {'py/tuple': [342, 295]}]},
     # {'py/tuple': [-1, {'py/tuple': [0, 0, 0, 0]}, [0, -1]]}], {'py/set': [-1, -2]}]print(results)
-    '''
     confidence = results[0][i]['py/tuple'][0]
     bboxes = results[0][i]['py/tuple'][1]['py/tuple']
     centroids = results[0][i]['py/tuple'][2]['py/tuple'])
@@ -163,29 +179,38 @@ while True:
         color = (0, 255, 0)
         # if the index pair exists within the violation set, then
         # update the color
-        if i in violations:
+        if i in violations and sens[2] < 5.0:
+            ser.write(b'ALRM')
             color = (0, 0, 255)
+            inpures +=1
+            FLAG_IMPURES = True
+            print('Impurity is not acceptable!!')
+
         # draw (1) a bounding box around the person and (2) the
         # centroid coordinates of the person,
         cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
         cv2.circle(frame, (cX, cY), 3, (90, 0, 252), 2)
+        # MQTT Module
+        # Ready but not implemented to test on RPi (local IP working)
 
-    # draw the total number of social distancing violations on the
+
+    # Draw the total number of social distancing violations on the
     # output frame
-    text = "Social Distancing Violations: {}".format(len(violations))
+    text = "Social Distancing Violations: {}".format(inpures)
     cv2.putText(frame, text, (10, frame.shape[0] - 25),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.85, (0, 0, 255), 3)
 
     # SPEED TESTER
     elapse = time.time() - start_time
-
+    print(elapse)
     fps = frame_id / elapse
     # function_putText = (img, text, org, fontFace, fontScale, color, thikness, lineType, botonLeft)
     cv2.putText(frame, "FPS: " + str(round(fps, 2)), (10, 30), font, 3, (0, 255, 0), 1)
 
     # OUTPUT IMAGE
-    cv2.imshow("Scratch_YOLO_CV_2.1", frame)
+    cv2.imshow("IMPURE DETECTOR", frame)
     key = cv2.waitKey(1)
+    # MQTT_PUBLISH(frame, sens) if FLAG_IMPURES (Not tested WAN)
 
 
     if (key % 256 == 27):
@@ -193,7 +218,7 @@ while True:
         print("Escape hit, closing...")
         cam.release()
         cv2.destroyAllWindows()
+        ser.close()
         break
-
 
 
