@@ -30,7 +30,8 @@ from modules import impure_detector
 
 # ## CONFIG
 # FLASK
-SERVER_HOST= "localhost"
+#SERVER_HOST= "localhost"
+SERVER_HOST = '192.168.1.59'
 SERVER_PORT = 8090
 API_PATH = "/api/test"
 # VISION
