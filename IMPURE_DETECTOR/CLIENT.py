@@ -39,6 +39,7 @@ data_send = {'index': 1,'img_id': 2, 'time': 3, 'Cx': 4.1,'Cy': 5,'Cz': 5.001, '
 ser=serial.Serial('/dev/ttyACM0',115200, bytesize = 8, stopbits = 1,
                   timeout = 0, parity='N')
 print(ser.name)         # check which port was really used
+# In case permission error $sudo chmod a+rw /dev/ttyACM0
 
 # ## CONFIG
 SERVER_HOST= "localhost"
