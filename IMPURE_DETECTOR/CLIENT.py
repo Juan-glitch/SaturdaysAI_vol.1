@@ -93,6 +93,7 @@ url = "http://"+SERVER_HOST+":"+str(SERVER_PORT)+API_PATH #(Local)
 # # START CAPTURING
 n = 2 #camera
 cam = cv2.VideoCapture(n)   #WebCam, if is not working change the number
+# If error check camera devices $ls -ltrh /dev/video*
 
 # CONFIG/ PARAMETERS
 
