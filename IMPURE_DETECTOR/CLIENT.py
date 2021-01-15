@@ -43,7 +43,7 @@ print(ser.name)         # check which port was really used
 # In case permission error $sudo chmod a+rw /dev/ttyACM0
 
 # ## CONFIG
-SERVER_HOST= "localhost"
+SERVER_HOST= "localhost" # or an IP adress
 SERVER_PORT = 8080
 API_PATH = "/api/test"
 test_url = SERVER_HOST + API_PATH
