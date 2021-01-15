@@ -427,26 +427,18 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart)
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
+	
 {
 	if(strncmp(buf,CMDS[0],4)==0){       // SEND:msg
 		HAL_UART_Transmit_IT(&huart2, cad, sizeof(cad));
-
 	}
 	else if(strncmp(buf,CMDS[1],4)==0){  // ALRM:msg
-
 		FLAG = 1;
-
 	}
 	else{  // ALRM:msg
-
 		HAL_UART_Transmit_IT(&huart2, CMDS[2], sizeof(CMDS[2]));
-
-
 	}
-
-
 	HAL_UART_Receive_IT(&huart2, buf, sizeof(buf));
-
 }
 
 void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin)
