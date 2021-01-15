@@ -36,6 +36,7 @@ data_send = {'index': 1,'img_id': 2, 'time': 3, 'Cx': 4.1,'Cy': 5,'Cz': 5.001, '
 
 
 # SERIAL
+# To check abailiable ports $python -m serial.tools.list_ports -v
 ser=serial.Serial('/dev/ttyACM0',115200, bytesize = 8, stopbits = 1,
                   timeout = 0, parity='N')
 print(ser.name)         # check which port was really used
