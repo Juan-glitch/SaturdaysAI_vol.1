@@ -217,12 +217,12 @@ while True:
     # OUTPUT IMAGE
     cv2.imshow("IMPURE DETECTOR", frame)
     key = cv2.waitKey(1)
-    '''
-    # MQTT Module
-      # Ready but not implemented to test on RPi (local IP working)
-      (Not tested WAN)
-    '''
-    # MQTT_PUBLISH(frame, sens) if FLAG_IMPURES 
+    
+        # MQTT SEND (Not tested WAN)
+    if FLAG_IMPURES:
+        MQTT_PUBLISH(inpures, frame, sens )
+
+
 
 
     if (key % 256 == 27):
