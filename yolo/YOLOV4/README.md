@@ -30,7 +30,8 @@ Para instalar opencv en arquitectura arm hay que hacerlo a mano, para ello, hay 
 
 https://pysource.com/2019/08/26/install-opencv-4-1-on-nvidia-jetson-nano/
 https://www.google.com/search?client=firefox-b-d&q=opencv+version+for+raspbian+with+cv2.dnn.readNet // A partir de la versión 3.3 parece ser que es compatible con Rpi
-
+- IRQs in python
+https://docs.micropython.org/en/latest/reference/isr_rules.html
 ## Fuentes:
 
 - Social Distance Detector
